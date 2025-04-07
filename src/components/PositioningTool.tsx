@@ -25,6 +25,10 @@ interface BoxData {
   id: number;
   measurements: Measurement;
   color: string;
+  position?: {
+    x: number;
+    y: number;
+  };
 }
 
 export default function PositioningTool() {
@@ -84,43 +88,47 @@ export default function PositioningTool() {
           left: "0",
         };
 
-    // Calculate dimensions and positions
-    const width = `calc(${container.right} - ${container.left} - ${element.right} - ${element.left})`;
-    const height = `calc(${container.bottom} - ${container.top} - ${element.bottom} - ${element.top})`;
+    // Calculate x and y positions
+    const x = element.left;
+    const y = element.top;
 
     // Generate different positioning code snippets
     return [
-      // Absolute positioning
+      // Absolute positioning with x and y
       `<div style="
   position: absolute;
-  top: ${element.top};
-  right: ${element.right};
-  bottom: ${element.bottom};
-  left: ${element.left};
+  top: ${y};
+  left: ${x};
+  margin-top: ${element.top};
+  margin-right: ${element.right};
+  margin-bottom: ${element.bottom};
+  margin-left: ${element.left};
 "></div>`,
 
-      // Flexbox
+      // Flexbox with x and y
       `<div style="
   display: flex;
-  padding: ${element.top} ${element.right} ${element.bottom} ${element.left};
-  width: ${width};
-  height: ${height};
+  position: relative;
+  top: ${y};
+  left: ${x};
+  margin: ${element.top} ${element.right} ${element.bottom} ${element.left};
 "></div>`,
 
-      // Grid
+      // Grid with x and y
       `<div style="
   display: grid;
-  grid-template-columns: ${element.left} 1fr ${element.right};
-  grid-template-rows: ${element.top} 1fr ${element.bottom};
-  width: ${width};
-  height: ${height};
+  position: relative;
+  top: ${y};
+  left: ${x};
+  margin: ${element.top} ${element.right} ${element.bottom} ${element.left};
 "></div>`,
 
-      // Margin-based
+      // Margin-based with x and y
       `<div style="
+  position: relative;
+  top: ${y};
+  left: ${x};
   margin: ${element.top} ${element.right} ${element.bottom} ${element.left};
-  width: calc(100% - ${element.left} - ${element.right});
-  height: calc(100% - ${element.top} - ${element.bottom});
 "></div>`,
     ];
   };
@@ -135,41 +143,40 @@ export default function PositioningTool() {
   // Box calculation state
   const [selectedBoxId, setSelectedBoxId] = useState<number | null>(null);
 
-  // Calculate padding based on parent box
-  const calculatePadding = (childBox: Measurement, parentBox: Measurement) => {
+  // Calculate margins and positions
+  const calculatePositions = (
+    childBox: Measurement,
+    parentBox: Measurement,
+  ) => {
     return {
-      top:
-        childBox.top && parentBox.top
-          ? `${parseInt(childBox.top) - parseInt(parentBox.top)}px`
-          : undefined,
-      right:
-        childBox.right && parentBox.right
-          ? `${parseInt(parentBox.right) - parseInt(childBox.right)}px`
-          : undefined,
-      bottom:
-        childBox.bottom && parentBox.bottom
-          ? `${parseInt(parentBox.bottom) - parseInt(childBox.bottom)}px`
-          : undefined,
-      left:
-        childBox.left && parentBox.left
-          ? `${parseInt(childBox.left) - parseInt(parentBox.left)}px`
-          : undefined,
+      x: childBox.left ? parseInt(childBox.left) : 0,
+      y: childBox.top ? parseInt(childBox.top) : 0,
+      marginTop: childBox.top ? parseInt(childBox.top) : 0,
+      marginRight: childBox.right ? parseInt(childBox.right) : 0,
+      marginBottom: childBox.bottom ? parseInt(childBox.bottom) : 0,
+      marginLeft: childBox.left ? parseInt(childBox.left) : 0,
     };
   };
 
   // Add a new box with current measurements
   const addBox = () => {
     const colors = [
-      "border-green-600 bg-white/40",
-      "border-green-500 bg-white/60",
-      "border-green-400 bg-white/80",
-      "border-green-300 bg-white",
+      "border-blue-600 bg-white/40",
+      "border-blue-500 bg-white/60",
+      "border-blue-400 bg-white/80",
+      "border-blue-300 bg-white",
     ];
+
+    const position = {
+      x: newBoxMeasurements.left ? parseInt(newBoxMeasurements.left) : 0,
+      y: newBoxMeasurements.top ? parseInt(newBoxMeasurements.top) : 0,
+    };
 
     const newBox: BoxData = {
       id: nextBoxId,
       measurements: { ...newBoxMeasurements },
       color: colors[Math.min(boxes.length, colors.length - 1)],
+      position,
     };
 
     const newBoxes = [...boxes, newBox];
@@ -207,37 +214,37 @@ export default function PositioningTool() {
   const codeSnippets = generateCodeSnippets();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-6">
       <Card className="max-w-4xl mx-auto bg-white/90 backdrop-blur-sm shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-green-100 to-teal-100 rounded-t-lg">
-          <CardTitle className="text-2xl text-green-800">
-            Figma Ruler Measurements to HTML Converter
+        <CardHeader className="bg-gradient-to-r from-blue-100 to-indigo-100 rounded-t-lg">
+          <CardTitle className="text-2xl text-blue-800">
+            Element Position & Margin Calculator
           </CardTitle>
-          <CardDescription className="text-green-700">
+          <CardDescription className="text-blue-700">
             Input measurements from Figma rulers and generate HTML/CSS code for
-            positioning elements.
+            positioning elements with x/y coordinates and margins.
           </CardDescription>
         </CardHeader>
 
         <CardContent className="p-6">
           {/* Box Builder */}
-          <div className="mb-8 p-4 border border-green-200 rounded-md bg-green-50">
-            <h3 className="text-lg font-medium text-green-700 mb-2">
+          <div className="mb-8 p-4 border border-blue-200 rounded-md bg-blue-50">
+            <h3 className="text-lg font-medium text-blue-700 mb-2">
               Box Builder
             </h3>
-            <p className="text-green-600 mb-4">
-              Add boxes one at a time, starting with the innermost element
+            <p className="text-blue-600 mb-4">
+              Add boxes one at a time, with x/y coordinates and margins
             </p>
 
             {/* Box Measurements */}
             <div className="space-y-4 mb-4">
-              <h4 className="text-md font-medium text-green-700">
+              <h4 className="text-md font-medium text-blue-700">
                 New Box Measurements
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <Label htmlFor="box-top" className="text-green-600">
-                    Top
+                  <Label htmlFor="box-top" className="text-blue-600">
+                    Top (Y)
                   </Label>
                   <Input
                     id="box-top"
@@ -246,12 +253,12 @@ export default function PositioningTool() {
                     onChange={(e) =>
                       handleBoxMeasurementChange("top", e.target.value)
                     }
-                    className="border-green-200 focus:border-green-500"
+                    className="border-blue-200 focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="box-right" className="text-green-600">
-                    Right
+                  <Label htmlFor="box-right" className="text-blue-600">
+                    Right Margin
                   </Label>
                   <Input
                     id="box-right"
@@ -260,12 +267,12 @@ export default function PositioningTool() {
                     onChange={(e) =>
                       handleBoxMeasurementChange("right", e.target.value)
                     }
-                    className="border-green-200 focus:border-green-500"
+                    className="border-blue-200 focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="box-bottom" className="text-green-600">
-                    Bottom
+                  <Label htmlFor="box-bottom" className="text-blue-600">
+                    Bottom Margin
                   </Label>
                   <Input
                     id="box-bottom"
@@ -274,12 +281,12 @@ export default function PositioningTool() {
                     onChange={(e) =>
                       handleBoxMeasurementChange("bottom", e.target.value)
                     }
-                    className="border-green-200 focus:border-green-500"
+                    className="border-blue-200 focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="box-left" className="text-green-600">
-                    Left
+                  <Label htmlFor="box-left" className="text-blue-600">
+                    Left (X)
                   </Label>
                   <Input
                     id="box-left"
@@ -288,7 +295,7 @@ export default function PositioningTool() {
                     onChange={(e) =>
                       handleBoxMeasurementChange("left", e.target.value)
                     }
-                    className="border-green-200 focus:border-green-500"
+                    className="border-blue-200 focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -297,7 +304,7 @@ export default function PositioningTool() {
             <div className="flex items-center justify-between mb-4">
               <Button
                 onClick={addBox}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-blue-600 hover:bg-blue-700"
                 disabled={
                   !newBoxMeasurements.top &&
                   !newBoxMeasurements.right &&
@@ -310,16 +317,16 @@ export default function PositioningTool() {
               <Button
                 onClick={resetBoxes}
                 variant="outline"
-                className="border-green-600 text-green-700 hover:bg-green-50"
+                className="border-blue-600 text-blue-700 hover:bg-blue-50"
               >
                 Reset All Boxes
               </Button>
             </div>
 
             {/* Box Preview */}
-            <div className="relative border-2 border-dashed border-green-300 p-12 min-h-[400px] bg-white/90">
+            <div className="relative border-2 border-dashed border-blue-300 p-12 min-h-[400px] bg-white/90">
               {boxes.length === 0 ? (
-                <div className="absolute inset-0 flex items-center justify-center text-green-600 opacity-70">
+                <div className="absolute inset-0 flex items-center justify-center text-blue-600 opacity-70">
                   Add boxes to visualize placement
                 </div>
               ) : (
@@ -333,14 +340,21 @@ export default function PositioningTool() {
                       // Calculate positioning based on measurements
                       const style: React.CSSProperties = {
                         position: "relative",
-                        top: box.measurements.top ? undefined : undefined,
-                        right: box.measurements.right ? undefined : undefined,
-                        bottom: box.measurements.bottom ? undefined : undefined,
-                        left: box.measurements.left ? undefined : undefined,
+                        top: box.measurements.top || undefined,
+                        left: box.measurements.left || undefined,
+                        marginTop: box.measurements.top ? undefined : undefined,
+                        marginRight: box.measurements.right
+                          ? undefined
+                          : undefined,
+                        marginBottom: box.measurements.bottom
+                          ? undefined
+                          : undefined,
+                        marginLeft: box.measurements.left
+                          ? undefined
+                          : undefined,
                         padding: "1rem",
                         border: "2px solid",
                         borderRadius: "0.25rem",
-                        margin: "0 auto",
                         width: "fit-content",
                         minWidth: "180px",
                         minHeight: "100px",
@@ -350,58 +364,13 @@ export default function PositioningTool() {
                         alignItems: "center",
                       };
 
-                      // If this is not the outermost box, calculate padding from measurements
-                      if (index < boxes.length - 1) {
-                        const parentBox = boxes[index + 1];
-                        if (
-                          parentBox &&
-                          box.measurements.top &&
-                          parentBox.measurements.top
-                        ) {
-                          const topDiff =
-                            parseInt(box.measurements.top) -
-                            parseInt(parentBox.measurements.top);
-                          style.marginTop = `${topDiff}px`;
-                        }
-                        if (
-                          parentBox &&
-                          box.measurements.left &&
-                          parentBox.measurements.left
-                        ) {
-                          const leftDiff =
-                            parseInt(box.measurements.left) -
-                            parseInt(parentBox.measurements.left);
-                          style.marginLeft = `${leftDiff}px`;
-                        }
-                        if (
-                          parentBox &&
-                          box.measurements.right &&
-                          parentBox.measurements.right
-                        ) {
-                          const rightDiff =
-                            parseInt(parentBox.measurements.right) -
-                            parseInt(box.measurements.right);
-                          style.marginRight = `${rightDiff}px`;
-                        }
-                        if (
-                          parentBox &&
-                          box.measurements.bottom &&
-                          parentBox.measurements.bottom
-                        ) {
-                          const bottomDiff =
-                            parseInt(parentBox.measurements.bottom) -
-                            parseInt(box.measurements.bottom);
-                          style.marginBottom = `${bottomDiff}px`;
-                        }
-                      }
-
-                      // Calculate dimensions for display
-                      const boxWidth = style.width || "auto";
-                      const boxHeight = style.height || "auto";
-                      const marginTop = style.marginTop || "0px";
-                      const marginRight = style.marginRight || "0px";
-                      const marginBottom = style.marginBottom || "0px";
-                      const marginLeft = style.marginLeft || "0px";
+                      // Calculate x and y positions for display
+                      const xPos = box.position?.x || 0;
+                      const yPos = box.position?.y || 0;
+                      const marginRight = box.measurements.right || "0px";
+                      const marginBottom = box.measurements.bottom || "0px";
+                      const marginLeft = box.measurements.left || "0px";
+                      const marginTop = box.measurements.top || "0px";
 
                       return (
                         <div
@@ -413,29 +382,15 @@ export default function PositioningTool() {
                             setSelectedBoxId(box.id);
                           }}
                         >
-                          {/* Box label */}
-                          {index === 0 ? (
-                            <div className="text-center font-medium">
-                              Innermost Box
+                          {/* Box label with position */}
+                          <div className="text-center font-medium">
+                            Box {index + 1}
+                            <div className="text-xs text-blue-600">
+                              X: {xPos}px, Y: {yPos}px
                             </div>
-                          ) : (
-                            <div className="text-center font-medium">
-                              Box {index + 1}
-                            </div>
-                          )}
-
-                          {/* Dimensions display */}
-                          <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs bg-white/90 px-1 rounded border border-green-200 whitespace-nowrap">
-                            {typeof style.minWidth === "string"
-                              ? style.minWidth
-                              : "auto"}{" "}
-                            ×{" "}
-                            {typeof style.minHeight === "string"
-                              ? style.minHeight
-                              : "auto"}
                           </div>
 
-                          {/* Margin indicators - only show if there's a margin */}
+                          {/* Margin indicators */}
                           {marginTop !== "0px" && (
                             <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs bg-white/90 px-1 rounded border border-amber-200 whitespace-nowrap">
                               ↕ {marginTop}
@@ -457,13 +412,6 @@ export default function PositioningTool() {
                             </div>
                           )}
 
-                          {/* Padding indicator - only show for the innermost box */}
-                          {index === 0 && (
-                            <div className="absolute top-0 right-0 text-xs bg-white/90 px-1 rounded-bl border border-green-200 whitespace-nowrap">
-                              Padding: {style.padding}
-                            </div>
-                          )}
-
                           {children}
                         </div>
                       );
@@ -475,25 +423,26 @@ export default function PositioningTool() {
             {/* Box Measurements List */}
             {boxes.length > 0 && (
               <div className="mt-4">
-                <h4 className="text-md font-medium text-green-700 mb-2">
+                <h4 className="text-md font-medium text-blue-700 mb-2">
                   Added Boxes ({boxes.length})
                 </h4>
                 <div className="space-y-2">
                   {boxes.map((box, index) => (
                     <div
                       key={box.id}
-                      className={`flex items-center justify-between p-2 rounded border ${selectedBoxId === box.id ? "bg-green-100 border-green-400" : "bg-white/80 border-green-200"} cursor-pointer`}
+                      className={`flex items-center justify-between p-2 rounded border ${selectedBoxId === box.id ? "bg-blue-100 border-blue-400" : "bg-white/80 border-blue-200"} cursor-pointer`}
                       onClick={() => setSelectedBoxId(box.id)}
                     >
-                      <span className="font-medium text-green-800">
-                        {index === 0 ? "Innermost Box" : `Box ${index + 1}`}
+                      <span className="font-medium text-blue-800">
+                        Box {index + 1}
                       </span>
-                      <div className="text-xs text-green-600">
-                        {box.measurements.top && (
-                          <span className="mr-2">
-                            T: {box.measurements.top}
-                          </span>
-                        )}
+                      <div className="text-xs text-blue-600">
+                        <span className="mr-2">
+                          X: {box.position?.x || 0}px
+                        </span>
+                        <span className="mr-2">
+                          Y: {box.position?.y || 0}px
+                        </span>
                         {box.measurements.right && (
                           <span className="mr-2">
                             R: {box.measurements.right}
@@ -502,11 +451,6 @@ export default function PositioningTool() {
                         {box.measurements.bottom && (
                           <span className="mr-2">
                             B: {box.measurements.bottom}
-                          </span>
-                        )}
-                        {box.measurements.left && (
-                          <span className="mr-2">
-                            L: {box.measurements.left}
                           </span>
                         )}
                       </div>
@@ -530,32 +474,32 @@ export default function PositioningTool() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Code Output */}
               <div>
-                <h3 className="text-lg font-medium text-green-700 mb-4">
+                <h3 className="text-lg font-medium text-blue-700 mb-4">
                   Generated Code
                 </h3>
                 <Tabs defaultValue="absolute" className="w-full">
                   <TabsList className="grid grid-cols-4 mb-4">
                     <TabsTrigger
                       value="absolute"
-                      className="data-[state=active]:bg-green-100"
+                      className="data-[state=active]:bg-blue-100"
                     >
                       Absolute
                     </TabsTrigger>
                     <TabsTrigger
                       value="flexbox"
-                      className="data-[state=active]:bg-green-100"
+                      className="data-[state=active]:bg-blue-100"
                     >
                       Flexbox
                     </TabsTrigger>
                     <TabsTrigger
                       value="grid"
-                      className="data-[state=active]:bg-green-100"
+                      className="data-[state=active]:bg-blue-100"
                     >
                       Grid
                     </TabsTrigger>
                     <TabsTrigger
                       value="margin"
-                      className="data-[state=active]:bg-green-100"
+                      className="data-[state=active]:bg-blue-100"
                     >
                       Margin
                     </TabsTrigger>
@@ -573,7 +517,7 @@ export default function PositioningTool() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="absolute top-2 right-2 bg-green-50 hover:bg-green-100 text-green-700"
+                        className="absolute top-2 right-2 bg-blue-50 hover:bg-blue-100 text-blue-700"
                         onClick={() => copyToClipboard(snippet, index)}
                       >
                         {copiedIndex === index ? "Copied!" : "Copy"}
@@ -583,69 +527,43 @@ export default function PositioningTool() {
                 </Tabs>
               </div>
 
-              {/* Box Calculations */}
+              {/* Box Position Details */}
               <div>
-                <h3 className="text-lg font-medium text-green-700 mb-4">
-                  Box Calculations
+                <h3 className="text-lg font-medium text-blue-700 mb-4">
+                  Box Position Details
                 </h3>
-                <div className="border-2 border-green-200 rounded-md p-4 bg-white min-h-[300px] overflow-auto">
+                <div className="border-2 border-blue-200 rounded-md p-4 bg-white min-h-[300px] overflow-auto">
                   {boxes.length === 0 ? (
-                    <div className="text-green-600 opacity-70 text-center">
-                      Add boxes to see calculations
+                    <div className="text-blue-600 opacity-70 text-center">
+                      Add boxes to see position details
                     </div>
                   ) : selectedBoxId ? (
                     <div className="space-y-4">
                       {boxes.map((box, index) => {
                         if (box.id === selectedBoxId) {
-                          // Find parent box if exists
-                          const parentIndex = index + 1;
-                          const parentBox =
-                            parentIndex < boxes.length
-                              ? boxes[parentIndex]
-                              : null;
-
-                          // Calculate differences if parent exists
-                          const calculations = parentBox
-                            ? {
-                                top:
-                                  parentBox.measurements.top &&
-                                  box.measurements.top
-                                    ? `${parseInt(box.measurements.top) - parseInt(parentBox.measurements.top)}px`
-                                    : "N/A",
-                                right:
-                                  parentBox.measurements.right &&
-                                  box.measurements.right
-                                    ? `${parseInt(parentBox.measurements.right) - parseInt(box.measurements.right)}px`
-                                    : "N/A",
-                                bottom:
-                                  parentBox.measurements.bottom &&
-                                  box.measurements.bottom
-                                    ? `${parseInt(parentBox.measurements.bottom) - parseInt(box.measurements.bottom)}px`
-                                    : "N/A",
-                                left:
-                                  parentBox.measurements.left &&
-                                  box.measurements.left
-                                    ? `${parseInt(box.measurements.left) - parseInt(parentBox.measurements.left)}px`
-                                    : "N/A",
-                              }
-                            : null;
-
                           return (
                             <div
                               key={box.id}
-                              className="bg-green-50 p-4 rounded-md"
+                              className="bg-blue-50 p-4 rounded-md"
                             >
-                              <h4 className="font-medium text-green-800 mb-2">
-                                {index === 0
-                                  ? "Innermost Box"
-                                  : `Box ${index + 1}`}{" "}
-                                Calculations
+                              <h4 className="font-medium text-blue-800 mb-2">
+                                Box {index + 1} Position Details
                               </h4>
 
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                  <h5 className="text-sm font-medium text-green-700 mb-1">
-                                    Box Measurements
+                                  <h5 className="text-sm font-medium text-blue-700 mb-1">
+                                    Position Coordinates
+                                  </h5>
+                                  <ul className="text-sm space-y-1">
+                                    <li>X: {box.position?.x || 0}px</li>
+                                    <li>Y: {box.position?.y || 0}px</li>
+                                  </ul>
+                                </div>
+
+                                <div>
+                                  <h5 className="text-sm font-medium text-blue-700 mb-1">
+                                    Margin Measurements
                                   </h5>
                                   <ul className="text-sm space-y-1">
                                     <li>
@@ -664,73 +582,21 @@ export default function PositioningTool() {
                                     </li>
                                   </ul>
                                 </div>
-
-                                {parentBox && (
-                                  <div>
-                                    <h5 className="text-sm font-medium text-green-700 mb-1">
-                                      Parent Box Measurements
-                                    </h5>
-                                    <ul className="text-sm space-y-1">
-                                      <li>
-                                        Top:{" "}
-                                        {parentBox.measurements.top ||
-                                          "Not set"}
-                                      </li>
-                                      <li>
-                                        Right:{" "}
-                                        {parentBox.measurements.right ||
-                                          "Not set"}
-                                      </li>
-                                      <li>
-                                        Bottom:{" "}
-                                        {parentBox.measurements.bottom ||
-                                          "Not set"}
-                                      </li>
-                                      <li>
-                                        Left:{" "}
-                                        {parentBox.measurements.left ||
-                                          "Not set"}
-                                      </li>
-                                    </ul>
-                                  </div>
-                                )}
                               </div>
 
-                              {calculations && (
-                                <div className="mt-4">
-                                  <h5 className="text-sm font-medium text-green-700 mb-1">
-                                    Calculated Differences
-                                  </h5>
-                                  <div className="bg-white p-3 rounded border border-green-200">
-                                    <ul className="text-sm space-y-1">
-                                      <li>Padding Top: {calculations.top}</li>
-                                      <li>
-                                        Padding Right: {calculations.right}
-                                      </li>
-                                      <li>
-                                        Padding Bottom: {calculations.bottom}
-                                      </li>
-                                      <li>Padding Left: {calculations.left}</li>
-                                    </ul>
-
-                                    <div className="mt-3 pt-3 border-t border-green-100">
-                                      <p className="text-xs text-green-700">
-                                        CSS Equivalent:
-                                      </p>
-                                      <pre className="text-xs bg-gray-50 p-2 mt-1 rounded overflow-x-auto">
-                                        {`padding: ${calculations.top} ${calculations.right} ${calculations.bottom} ${calculations.left};`}
-                                      </pre>
-                                    </div>
-                                  </div>
+                              <div className="mt-4">
+                                <h5 className="text-sm font-medium text-blue-700 mb-1">
+                                  CSS Equivalent
+                                </h5>
+                                <div className="bg-white p-3 rounded border border-blue-200">
+                                  <pre className="text-xs bg-gray-50 p-2 mt-1 rounded overflow-x-auto">
+                                    {`position: relative;
+top: ${box.measurements.top || "0"};
+left: ${box.measurements.left || "0"};
+margin: ${box.measurements.top || "0"} ${box.measurements.right || "0"} ${box.measurements.bottom || "0"} ${box.measurements.left || "0"};`}
+                                  </pre>
                                 </div>
-                              )}
-
-                              {!parentBox && (
-                                <p className="text-sm text-amber-600 mt-3">
-                                  This is the outermost box, no parent box to
-                                  calculate differences.
-                                </p>
-                              )}
+                              </div>
                             </div>
                           );
                         }
@@ -738,8 +604,9 @@ export default function PositioningTool() {
                       })}
                     </div>
                   ) : (
-                    <div className="text-green-600 text-center">
-                      Click on a box in the list to see detailed calculations
+                    <div className="text-blue-600 text-center">
+                      Click on a box in the list to see detailed position
+                      information
                     </div>
                   )}
                 </div>
@@ -748,13 +615,14 @@ export default function PositioningTool() {
           </div>
         </CardContent>
 
-        <CardFooter className="bg-gradient-to-r from-green-50 to-teal-50 p-4 flex justify-between items-center">
-          <p className="text-green-700 text-sm">
-            Measurements are automatically applied to code snippets
+        <CardFooter className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 flex justify-between items-center">
+          <p className="text-blue-700 text-sm">
+            X/Y coordinates and margins are automatically applied to code
+            snippets
           </p>
           <Button
             onClick={resetBoxes}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-blue-600 hover:bg-blue-700"
           >
             Reset All
           </Button>
