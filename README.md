@@ -1,12 +1,11 @@
 Tool used along with mesurment tools in figma
-#########
-
+------------
 By using mesurment tools in figma, and this tool, one can calculate missing information - less need of measurments.
 
 This tool includes visualisation of boxes, with visualisation of padding and margins
 
 Pictures
-#####
+-----------
 
 ![image](https://github.com/user-attachments/assets/b5c3422c-f3b4-4b1b-a649-eb0aceddac16)
 
