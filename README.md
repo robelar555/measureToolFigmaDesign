@@ -1,4 +1,4 @@
-Element position and margin tool
+Element position and margin tool [generated with tempo.new]
 ------------
 By using mesurment tools in figma, and this tool, one can calculate missing information - less need of measurments.
 
