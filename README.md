@@ -1,4 +1,4 @@
-Tool used along with mesurment tools in figma
+Element position and margin tool
 ------------
 By using mesurment tools in figma, and this tool, one can calculate missing information - less need of measurments.
 
